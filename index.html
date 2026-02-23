@@ -3,25 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Syamdigital. Database</title>
+    <title>Syamdigital. Database Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-[#0f172a] text-slate-200 min-h-screen font-sans">
     <nav class="bg-slate-800/50 border-b border-slate-700 p-4 sticky top-0 z-50 backdrop-blur-md">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
             <span class="text-xl font-bold tracking-tighter">SYAM<span class="text-blue-500 italic">DIGITAL.</span></span>
-            <span id="status" class="text-[10px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full border border-blue-500/30 uppercase font-bold">System Online</span>
+            <span class="text-[10px] bg-green-500/20 text-green-400 px-3 py-1 rounded-full border border-green-500/30 uppercase font-bold">CRUD System Active</span>
         </div>
     </nav>
 
     <main class="max-w-4xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
         <!-- FORM -->
-        <section class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl">
-            <h2 class="text-lg font-bold mb-4 text-blue-400">INPUT USER</h2>
+        <section class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl h-fit">
+            <h2 id="formTitle" class="text-lg font-bold mb-4 text-blue-400 uppercase tracking-widest">Input User</h2>
             <form id="userForm" class="space-y-4">
+                <input type="hidden" id="userId"> <!-- Hidden ID untuk Edit -->
                 <input type="text" id="nama" placeholder="Nama Lengkap" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none" required>
                 <input type="email" id="email" placeholder="Email" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none" required>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 p-3 rounded-lg font-bold transition shadow-lg shadow-blue-900/20">SIMPAN KE NEON</button>
+                
+                <div class="flex gap-2">
+                    <button type="submit" id="btnSubmit" class="flex-1 bg-blue-600 hover:bg-blue-500 p-3 rounded-lg font-bold transition shadow-lg shadow-blue-900/20">SIMPAN DATA</button>
+                    <button type="button" id="btnCancel" onclick="resetForm()" class="hidden bg-slate-700 hover:bg-slate-600 p-3 rounded-lg font-bold transition">BATAL</button>
+                </div>
             </form>
         </section>
 
@@ -29,7 +34,7 @@
         <section>
             <h2 class="text-lg font-bold mb-4 text-blue-400 flex justify-between">
                 <span>DAFTAR AKTIF</span>
-                <span id="loading" class="hidden text-xs text-yellow-500 animate-pulse">Syncing...</span>
+                <span id="loading" class="hidden text-xs text-yellow-500 animate-pulse uppercase">Syncing...</span>
             </h2>
             <div id="user-list" class="space-y-3"></div>
         </section>
@@ -39,45 +44,85 @@
         const userForm = document.getElementById('userForm');
         const userList = document.getElementById('user-list');
         const loading = document.getElementById('loading');
+        const btnSubmit = document.getElementById('btnSubmit');
+        const btnCancel = document.getElementById('btnCancel');
+        const formTitle = document.getElementById('formTitle');
 
+        // 1. LOAD DATA
         async function loadUsers() {
             loading.classList.remove('hidden');
             try {
                 const res = await fetch('/api/get-users');
                 const data = await res.json();
                 if (data.length === 0) {
-                    userList.innerHTML = `<p class="text-slate-500 italic text-center py-10 border border-dashed border-slate-700 rounded-xl text-sm">Belum ada data user...</p>`;
+                    userList.innerHTML = `<p class="text-slate-500 italic text-center py-10 border border-dashed border-slate-700 rounded-xl text-sm">Database Kosong</p>`;
                     return;
                 }
                 userList.innerHTML = data.map(u => `
-                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center shadow-md hover:border-blue-500/50 transition">
-                        <div>
-                            <div class="font-bold text-white uppercase text-sm">${u.nama || u.name}</div>
-                            <div class="text-slate-400 text-xs">${u.email}</div>
+                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-blue-500 transition shadow-md">
+                        <div class="cursor-pointer flex-1" onclick="prepareEdit(${u.id}, '${u.nama}', '${u.email}')">
+                            <div class="font-bold text-white uppercase text-sm group-hover:text-blue-400 transition">${u.nama}</div>
+                            <div class="text-slate-400 text-xs font-light italic">${u.email}</div>
                         </div>
-                        <button onclick="deleteUser(${u.id})" class="bg-red-500/10 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg text-[10px] font-bold border border-red-500/20 transition uppercase">Hapus</button>
+                        <button onclick="deleteUser(${u.id})" class="bg-red-500/10 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1 rounded-lg text-[10px] font-bold border border-red-500/20 transition uppercase ml-4">Hapus</button>
                     </div>
                 `).join('');
             } catch (e) { console.error(e); }
             finally { loading.classList.add('hidden'); }
         }
 
+        // 2. PREPARE EDIT (Isi form saat nama diklik)
+        function prepareEdit(id, nama, email) {
+            document.getElementById('userId').value = id;
+            document.getElementById('nama').value = nama;
+            document.getElementById('email').value = email;
+            
+            formTitle.innerText = "Edit User";
+            btnSubmit.innerText = "UPDATE DATA";
+            btnSubmit.classList.replace('bg-blue-600', 'bg-orange-600');
+            btnCancel.classList.remove('hidden');
+        }
+
+        // 3. RESET FORM
+        function resetForm() {
+            userForm.reset();
+            document.getElementById('userId').value = "";
+            formTitle.innerText = "Input User";
+            btnSubmit.innerText = "SIMPAN DATA";
+            btnSubmit.classList.replace('bg-orange-600', 'bg-blue-600');
+            btnCancel.classList.add('hidden');
+        }
+
+        // 4. SIMPAN ATAU UPDATE
         userForm.onsubmit = async (e) => {
             e.preventDefault();
+            const id = document.getElementById('userId').value;
             const nama = document.getElementById('nama').value;
             const email = document.getElementById('email').value;
-            const res = await fetch('/api/add-user', {
-                method: 'POST',
+
+            // Jika ID ada, maka UPDATE. Jika tidak ada, maka ADD.
+            const url = id ? '/api/update-user' : '/api/add-user';
+            const method = id ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nama, email })
+                body: JSON.stringify({ id, nama, email })
             });
-            if (res.ok) { userForm.reset(); loadUsers(); } else { alert("Gagal simpan!"); }
+
+            if (res.ok) {
+                resetForm();
+                loadUsers();
+            } else {
+                alert("Proses Gagal!");
+            }
         };
 
+        // 5. HAPUS
         async function deleteUser(id) {
             if (!confirm("Hapus data ini?")) return;
             const res = await fetch('/api/delete-user?id=' + id, { method: 'DELETE' });
-            if (res.ok) loadUsers(); else alert("Gagal hapus!");
+            if (res.ok) loadUsers();
         }
 
         loadUsers();
