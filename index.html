@@ -2,186 +2,965 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Syamdigital - Pro Database System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net"></script>
-    <link href="https://fonts.googleapis.com" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); }
-        /* Style untuk menu non-aktif */
-        .nav-disabled { cursor: not-allowed; opacity: 0.4; filter: grayscale(1); }
-    </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aplikasi Pencarian Data Penduduk</title>
+  <link rel="icon" type="image/png" href="https://res.cloudinary.com/dpr2vc3b0/image/upload/v1767107096/logo_donggala-fix-2025_napiej.png">
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
-<body class="bg-[#0b1120] text-slate-200 min-h-screen">
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
 
-    <!-- NAVBAR PREMIUM -->
-    <nav class="glass sticky top-0 z-50 border-b border-slate-800 shadow-2xl">
-        <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-            <!-- LOGO -->
-            <div class="flex items-center gap-2">
-                <div class="w-9 h-9 bg-blue-600 rounded-xl rotate-12 flex items-center justify-center shadow-lg shadow-blue-900/50">
-                    <span class="text-white font-bold -rotate-12 italic text-lg">S</span>
-                </div>
-                <span class="text-xl font-bold tracking-tighter text-white uppercase italic">SYAM<span class="text-blue-500">DIGITAL.</span></span>
+
+    <!-- LAYAR LOGIN -->
+    <div id="login-screen" class="bg-white p-8 rounded-lg shadow-md w-96 text-center">
+
+        <h1 class="text-2xl font-bold mb-4 text-blue-600">Syamdigital</h1>
+        <input type="password" id="passInput" placeholder="Masukkan Password" 
+               class="w-full p-2 border rounded mb-4 focus:outline-blue-500">
+        <button onclick="handleLogin()" 
+                class="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Masuk</button>
+        <p id="errorMsg" class="text-red-500 mt-2 hidden text-sm">Password Salah!</p>
+
+    </button>
+<button type="button" onclick="togglePassword()" 
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-blue-600">
+        <i id="eyeIcon" data-lucide="eye"></i>
+</div>
+
+    </div>
+
+    <!-- LAYAR APLIKASI (Sembunyi di awal) -->
+    <div id="app" class="hidden w-full max-w-4xl p-4 self-start mt-10">
+        <div class="bg-white p-6 rounded-lg shadow-lg">
+            <h2 class="text-xl font-bold mb-4">Pencarian Data Penduduk</h2>
+            
+            <!-- Indikator Loading Data -->
+            <div id="status-data" class="text-sm text-orange-500 mb-2 italic">
+                ⏳ Menghubungkan ke Google Sheets...
             </div>
 
-            <!-- NAV MENU -->
-            <div class="hidden md:flex gap-8 text-sm font-semibold tracking-wide uppercase">
-                <a href="#" class="text-blue-400 border-b-2 border-blue-500 pb-1">Dashboard</a>
-                <a href="#user-section" class="text-slate-400 hover:text-white transition">Users</a>
-                <!-- Menu Non-Aktif secara Profesional -->
-                <div class="nav-disabled flex items-center gap-1 text-slate-500" title="Feature Locked">
-                    <span class="text-[10px]">🔒</span> Settings
-                </div>
-            </div>
+            <input type="text" id="searchInput" onkeyup="jalankanCari()"
+                   placeholder="Cari Nama, NIK, atau Dusun..." 
+                   class="w-full p-3 border-2 border-blue-200 rounded-lg focus:border-blue-500 outline-none mb-4" disabled>
 
-            <!-- ADMIN PANEL (NON-AKTIF) -->
-            <button disabled class="nav-disabled bg-slate-800 text-slate-500 px-5 py-2 rounded-full text-xs font-bold uppercase tracking-widest border border-slate-700">
-                Admin Panel
-            </button>
-        </div>
-    </nav>
-
-    <main class="max-w-6xl mx-auto px-6 py-12 grid grid-cols-1 lg:grid-cols-12 gap-10">
-        
-        <!-- KIRI: FORM TAMBAH USER -->
-        <div class="lg:col-span-5">
-            <div class="bg-slate-900/50 p-8 rounded-3xl border border-slate-800 shadow-2xl">
-                <h2 class="text-2xl font-bold text-white mb-2 italic uppercase tracking-tighter">Register <span class="text-blue-500">User</span></h2>
-                <p class="text-slate-500 text-xs mb-8 italic font-light">Input data baru ke infrastruktur Neon Database.</p>
-                
-                <form id="userForm" class="space-y-5">
-                    <div>
-                        <label class="block text-[10px] font-bold text-blue-500 uppercase mb-2 ml-1 tracking-[0.2em]">Nama Lengkap</label>
-                        <input type="text" id="nama" placeholder="Masukkan nama..." 
-                               class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition text-white placeholder:text-slate-700 shadow-inner" required>
-                    </div>
-                    <div>
-                        <label class="block text-[10px] font-bold text-blue-500 uppercase mb-2 ml-1 tracking-[0.2em]">Alamat Email</label>
-                        <input type="email" id="email" placeholder="email@syamdigital.com" 
-                               class="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition text-white placeholder:text-slate-700 shadow-inner" required>
-                    </div>
-                    <button type="submit" 
-                            class="w-full bg-gradient-to-r from-blue-700 to-blue-600 hover:from-blue-600 hover:to-blue-500 p-4 rounded-2xl font-bold text-white transition-all transform active:scale-95 shadow-xl shadow-blue-900/30 uppercase tracking-widest text-sm italic">
-                        Confirm & Save
-                    </button>
-                </form>
+            <div id="hasilPencarian" class="space-y-2 max-h-[500px] overflow-y-auto">
+                <!-- Hasil Muncul di Sini -->
             </div>
         </div>
-
-        <!-- KANAN: DAFTAR USER & SEARCH -->
-        <div class="lg:col-span-7" id="user-section">
-            <div class="flex justify-between items-end mb-6">
-                <div>
-                    <h2 class="text-2xl font-bold text-white italic uppercase tracking-tighter">Active <span class="text-blue-500">Database</span></h2>
-                    <p class="text-slate-500 text-xs italic">Live sync with Neon.tech</p>
-                </div>
-                <span id="loading" class="hidden animate-pulse text-blue-400 font-bold text-[10px] uppercase tracking-[0.3em] bg-blue-950 px-3 py-1 rounded-full border border-blue-900">Syncing...</span>
-            </div>
-
-            <!-- SEARCH BAR -->
-            <div class="relative mb-8 group">
-                <input type="text" id="searchInput" onkeyup="filterUsers()" placeholder="Cari nama atau email user..." 
-                       class="w-full bg-slate-900/50 border border-slate-800 rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-blue-500 transition shadow-lg italic">
-                <span class="absolute left-5 top-4 opacity-30 group-focus-within:opacity-100 transition">🔍</span>
-            </div>
-
-            <div id="user-list" class="grid grid-cols-1 gap-4">
-                <!-- User cards will appear here -->
-            </div>
-        </div>
-
-    </main>
+    </div>
 
     <script>
-        let allUsers = [];
-        const userForm = document.getElementById('userForm');
-        const userList = document.getElementById('user-list');
-        const loading = document.getElementById('loading');
-        const searchInput = document.getElementById('searchInput');
+        let SEMUA_DATA = [];
+        let MESIN_CARI;
 
-        async function loadUsers() {
-            loading.classList.remove('hidden');
-            try {
-                const res = await fetch('/api/get-users');
-                allUsers = await res.json();
-                renderUsers(allUsers);
-            } catch (e) { console.error(e); }
-            finally { loading.classList.add('hidden'); }
-        }
-
-        function renderUsers(users) {
-            if (users.length === 0) {
-                userList.innerHTML = `<div class="text-center py-20 border-2 border-dashed border-slate-800 rounded-3xl text-slate-600 italic text-sm uppercase tracking-widest">No Records Found</div>`;
-                return;
-            }
-            userList.innerHTML = users.map(u => `
-                <div class="bg-slate-900/30 p-5 rounded-2xl border border-slate-800 flex justify-between items-center group hover:bg-slate-900/60 hover:border-blue-500/30 transition-all duration-300">
-                    <div class="flex items-center gap-5">
-                        <div class="w-12 h-12 bg-slate-950 rounded-2xl flex items-center justify-center text-blue-500 font-bold border border-slate-800 group-hover:border-blue-500 transition-all uppercase shadow-lg shadow-black">
-                            ${u.nama.charAt(0)}
-                        </div>
-                        <div>
-                            <div class="font-bold text-white text-md uppercase tracking-tight">${u.nama}</div>
-                            <div class="text-slate-500 text-xs italic font-light">${u.email}</div>
-                        </div>
-                    </div>
-                    <button onclick="deleteUser(${u.id})" class="bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-4 py-2 rounded-xl text-[10px] font-bold transition-all border border-red-500/20 uppercase tracking-widest shadow-lg">
-                        Delete
-                    </button>
-                </div>
-            `).join('');
-        }
-
-        function filterUsers() {
-            const keyword = searchInput.value.toLowerCase();
-            const filtered = allUsers.filter(u => u.nama.toLowerCase().includes(keyword) || u.email.toLowerCase().includes(keyword));
-            renderUsers(filtered);
-        }
-
-        userForm.onsubmit = async (e) => {
-            e.preventDefault();
-            loading.classList.remove('hidden');
-            const nama = document.getElementById('nama').value;
-            const email = document.getElementById('email').value;
-
-            const res = await fetch('/api/add-user', {
+        // 1. FUNGSI LOGIN
+        async function handleLogin() {
+            const password = document.getElementById('passInput').value;
+            const res = await fetch('/api/auth', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nama, email })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ password })
             });
 
             if (res.ok) {
-                userForm.reset();
-                loadUsers();
-                Swal.fire({
-                    icon: 'success', title: 'USER SAVED', text: 'Data has been pushed to Neon Database',
-                    background: '#0f172a', color: '#f1f5f9', timer: 1500, showConfirmButton: false
-                });
-            }
-            loading.classList.add('hidden');
-        };
-
-        async function deleteUser(id) {
-            const result = await Swal.fire({
-                title: 'UNREGISTER USER?', text: "This action cannot be undone in Neon.tech", icon: 'warning',
-                showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#1e293b',
-                confirmButtonText: 'CONFIRM DELETE', background: '#0f172a', color: '#f1f5f9'
-            });
-
-            if (result.isConfirmed) {
-                loading.classList.remove('hidden');
-                const res = await fetch('/api/delete-user?id=' + id, { method: 'DELETE' });
-                if (res.ok) {
-                    loadUsers();
-                    Swal.fire({ icon: 'success', title: 'DELETED', background: '#0f172a', color: '#f1f5f9', timer: 1000, showConfirmButton: false });
-                }
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app').classList.remove('hidden');
+                // Langsung panggil fungsi tarik data
+                ambilDataSheets();
+            } else {
+                document.getElementById('errorMsg').classList.remove('hidden');
             }
         }
 
-        loadUsers();
+        // 2. FUNGSI TARIK DATA (TIDAK BLOCKING)
+       
+
+    async function fetchData() {
+      try {
+        const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRd3_sz649R1j66EVGQIzrBZa-fQJTR0IvBXiFXlI7nlFmQgbG__qVa9EUM5JUkalFQUXaT3oPLlv2Y/pubhtml?gid=0&single=true&output=csv';
+        const response = await fetch(sheetUrl);
+        
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        
+        const csvText = await response.text();
+        const data = parseCSV(csvText);
+        
+        return data;
+      } catch (error) {
+        try {
+          const altUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRd3_sz649R1j66EVGQIzrBZa-fQJTR0IvBXiFXlI7nlFmQgbG__qVa9EUM5JUkalFQUXaT3oPLlv2Y/pub?output=csv';
+          const response = await fetch(altUrl);
+          const csvText = await response.text();
+          const data = parseCSV(csvText);
+          return data;
+        } catch (fallbackError) {
+          return [];
+        }
+      }
+    }
+
+
+
+
+        // 3. FUNGSI CARI KILAT
+        function jalankanCari() {
+            const kataKunci = document.getElementById('searchInput').value;
+            const kontainerHasil = document.getElementById('hasilPencarian');
+
+            if (!kataKunci) {
+                kontainerHasil.innerHTML = "";
+                return;
+            }
+
+            const hasil = MESIN_CARI.search(kataKunci);
+            
+            let html = "";
+            hasil.slice(0, 20).forEach(r => {
+                const p = r.item;
+                html += `
+                    <div class="p-3 border-b hover:bg-blue-50 cursor-pointer">
+                        <p class="font-bold text-blue-800">${p.nama}</p>
+                        <p class="text-xs text-gray-600">NIK: ${p.nik} | Dusun: ${p.dusun} | Umur: ${p.Umur}</p>
+                    </div>
+                `;
+            });
+            kontainerHasil.innerHTML = html || "<p class='text-gray-400'>Data tidak ditemukan...</p>";
+        }
+function togglePassword() {
+    const passInput = document.getElementById('passInput');
+    const eyeIcon = document.getElementById('eyeIcon');
+    
+    if (passInput.type === "password") {
+        passInput.type = "text";
+        eyeIcon.setAttribute('data-lucide', 'eye-off'); // Ganti ikon jadi mata coret
+    } else {
+        passInput.type = "password";
+        eyeIcon.setAttribute('data-lucide', 'eye'); // Kembali ke mata terbuka
+    }
+    // Refresh ikon Lucide agar berubah
+    lucide.createIcons();
+}
+
+// Tambahkan ini di bagian paling bawah script agar ikon muncul saat pertama buka
+lucide.createIcons();
+
     </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9b9227fd77d3926c',t:'MTc2NzYwNzUxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script>
+<script>
+<!-- WhatsApp Share Button -->
+        <div class="mt-6 pt-6 border-t-2 border-gold-accent">
+          <button 
+            onclick="shareToWhatsApp('${nik.replace(/'/g, "\\'")}', '${nama.replace(/'/g, "\\'")}', '${no_kk.replace(/'/g, "\\'")}', '${jenisKelamin.replace(/'/g, "\\'")}', '${tempatLahir.replace(/'/g, "\\'")}', '${tanggalLahir.replace(/'/g, "\\'")}', '${umur}', '${agama.replace(/'/g, "\\'")}', '${dusun.replace(/'/g, "\\'")}', '${alamat.replace(/'/g, "\\'")}')"
+            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 text-lg"
+          >
+            <span class="text-2xl">📱</span>
+            <span>Bagikan ke WhatsApp</span>
+          </button>
+        </div>
+      `;
+      
+      modalOverlay.classList.remove('hidden');
+    }
+
+    function closeModal() {
+      const modalOverlay = document.getElementById('modal-overlay');
+      modalOverlay.classList.add('hidden');
+    }
+
+    function showExportModal() {
+      const exportModalOverlay = document.getElementById('export-modal-overlay');
+      const dusunList = document.getElementById('dusun-list');
+      
+      // Get unique dusun names
+      const dusunNames = [...new Set(allData.map(d => d.dusun))].filter(Boolean).sort();
+      
+      if (dusunNames.length === 0) {
+        showToast('Tidak ada data dusun untuk diekspor');
+        return;
+      }
+      
+      dusunList.innerHTML = dusunNames.map(dusun => {
+        const count = allData.filter(d => d.dusun === dusun).length;
+        const safeDusun = dusun.replace(/'/g, "\\'");
+        return `
+          <button 
+            class="export-dusun-btn w-full result-card rounded-xl p-4 text-left hover:border-gold-accent transition-all"
+            data-dusun="${safeDusun}"
+          >
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-bold gold-accent">${dusun}</h3>
+                <p class="text-gray-400 text-sm">${count} penduduk</p>
+              </div>
+              <div class="text-2xl">📄</div>
+            </div>
+          </button>
+        `;
+      }).join('');
+      
+      // Add click event listeners to dusun buttons
+      document.querySelectorAll('.export-dusun-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const dusun = btn.getAttribute('data-dusun');
+          exportDusunToPDF(dusun);
+        });
+      });
+      
+      // Add export all button listener
+      const exportAllButton = document.getElementById('export-all-button');
+      if (exportAllButton) {
+        // Remove existing listeners
+        const newExportAllButton = exportAllButton.cloneNode(true);
+        exportAllButton.parentNode.replaceChild(newExportAllButton, exportAllButton);
+        
+        // Add new listener
+        newExportAllButton.addEventListener('click', () => {
+          exportAllDusunToPDF();
+        });
+      }
+      
+      exportModalOverlay.classList.remove('hidden');
+    }
+
+    function closeExportModal() {
+      const exportModalOverlay = document.getElementById('export-modal-overlay');
+      exportModalOverlay.classList.add('hidden');
+    }
+
+    function shareToWhatsApp(nik, nama, no_kk, jenisKelamin, tempatLahir, tanggalLahir, umur, agama, dusun, alamat) {
+      const message = `*DATA PENDUDUK*\n\n` +
+        `📋 *Nama:* ${nama}\n` +
+        `🆔 *NIK:* ${nik}\n` +
+        `👥 *No. KK:* ${no_kk}\n` +
+        `👤 *Jenis Kelamin:* ${jenisKelamin}\n` +
+        `📅 *Tempat/Tgl Lahir:* ${tempatLahir}, ${tanggalLahir}\n` +
+        `🎂 *Umur:* ${umur} tahun\n` +
+        `🕌 *Agama:* ${agama}\n` +
+        `📍 *Dusun:* ${dusun}\n` +
+        `🏠 *Alamat:* ${alamat}\n\n` +
+        `_Data dari Sistem Pencarian Data Penduduk_\n\n` +
+        `ℹ️ Info selengkapnya: https://syam.digital/dataku`;
+      
+      const encodedMessage = encodeURIComponent(message);
+      const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+      
+      window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+      
+      showToast('Membuka WhatsApp...');
+    }
+
+    function exportAllDusunToPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+      
+      if (allData.length === 0) {
+        showToast('Tidak ada data untuk diekspor');
+        return;
+      }
+      
+      showToast('Membuat PDF untuk SEMUA DUSUN...');
+      
+      // Get unique dusun names
+      const dusunNames = [...new Set(allData.map(d => d.dusun))].filter(Boolean).sort();
+      
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidth = pageWidth - (2 * margin);
+      
+      let currentPage = 1;
+      let isFirstDusun = true;
+      
+      function drawHeader(pageNum, dusun) {
+        // Header
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.text('DATA PENDUDUK - SEMUA DUSUN', pageWidth / 2, 15, { align: 'center' });
+        
+        doc.setFontSize(12);
+        doc.text(`DUSUN: ${dusun.toUpperCase()}`, pageWidth / 2, 22, { align: 'center' });
+        
+        const dusunData = allData.filter(d => d.dusun === dusun);
+        const lakiLaki = dusunData.filter(d => d['Jenis Kelamin'] === '1' || d['Jenis Kelamin']?.toLowerCase() === 'laki-laki').length;
+        const perempuan = dusunData.filter(d => d['Jenis Kelamin'] === '2' || d['Jenis Kelamin']?.toLowerCase() === 'perempuan').length;
+        
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Total Dusun Ini: ${dusunData.length} | Laki-laki: ${lakiLaki} | Perempuan: ${perempuan}`, pageWidth / 2, 28, { align: 'center' });
+        doc.text(`Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`, pageWidth / 2, 33, { align: 'center' });
+        
+        // Page number
+        doc.setFontSize(8);
+        doc.text(`Halaman ${pageNum}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
+      }
+      
+      function drawTableHeader(startY) {
+        const colWidths = [8, 50, 28, 14, 35, 10, 25, 30, 30, 50];
+        let x = margin;
+        
+        doc.setFillColor(139, 0, 0);
+        doc.rect(margin, startY, contentWidth, 8, 'F');
+        
+        doc.setTextColor(255, 215, 0);
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'bold');
+        
+        const headers = ['NO', 'NAMA', 'NIK', 'JK', 'TTL', 'UMUR', 'AGAMA', 'PEKERJAAN', 'PENDIDIKAN', 'ALAMAT'];
+        
+        headers.forEach((header, i) => {
+          doc.text(header, x + (colWidths[i] / 2), startY + 5.5, { align: 'center' });
+          x += colWidths[i];
+        });
+        
+        doc.setTextColor(0, 0, 0);
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.1);
+        doc.rect(margin, startY, contentWidth, 8);
+        
+        let lineX = margin;
+        for (let i = 0; i < colWidths.length - 1; i++) {
+          lineX += colWidths[i];
+          doc.line(lineX, startY, lineX, startY + 8);
+        }
+        
+        return startY + 8;
+      }
+      
+      // Process each dusun
+      dusunNames.forEach((dusun, dusunIndex) => {
+        const dusunData = allData.filter(d => d.dusun === dusun);
+        
+        if (!isFirstDusun) {
+          doc.addPage();
+          currentPage++;
+        }
+        isFirstDusun = false;
+        
+        drawHeader(currentPage, dusun);
+        let y = drawTableHeader(38);
+        
+        const colWidths = [8, 50, 28, 14, 35, 10, 25, 30, 30, 50];
+        const rowHeight = 6;
+        
+        dusunData.forEach((row, index) => {
+          if (y > pageHeight - 20) {
+            doc.addPage();
+            currentPage++;
+            drawHeader(currentPage, dusun);
+            y = drawTableHeader(38);
+          }
+          
+          const nama = row.nama || '-';
+          const nik = row.nik || '-';
+          const jenisKelamin = (row['Jenis Kelamin'] === '1' || row['Jenis Kelamin']?.toLowerCase() === 'laki-laki') ? 'L' : 'P';
+          const tempatLahir = row.tempatlahir || '-';
+          const tanggalLahir = row.tanggallahir || '-';
+          const umur = row.Umur || row.umur || '-';
+          const agama = row.agama || '-';
+          const pekerjaan = row.pekerjaan_id || '-';
+          const pendidikan = row.pendidikan_kk_id || '-';
+          const alamat = row.alamat || '-';
+          
+          const ttl = `${tempatLahir}, ${tanggalLahir}`;
+          
+          doc.setFontSize(6.5);
+          doc.setFont(undefined, 'normal');
+          
+          let x = margin;
+          
+          // NO
+          doc.text(String(index + 1), x + (colWidths[0] / 2), y + 4, { align: 'center' });
+          x += colWidths[0];
+          
+          // NAMA
+          const namaLines = doc.splitTextToSize(nama, colWidths[1] - 2);
+          doc.text(namaLines[0] || nama, x + 1, y + 4);
+          x += colWidths[1];
+          
+          // NIK
+          doc.text(nik, x + 1, y + 4);
+          x += colWidths[2];
+          
+          // JK
+          doc.text(jenisKelamin, x + (colWidths[3] / 2), y + 4, { align: 'center' });
+          x += colWidths[3];
+          
+          // TTL
+          const ttlLines = doc.splitTextToSize(ttl, colWidths[4] - 2);
+          if (ttlLines.length > 1) {
+            doc.text(ttlLines[0], x + 1, y + 2.5);
+            doc.text(ttlLines[1], x + 1, y + 5);
+          } else {
+            doc.text(ttlLines[0] || ttl, x + 1, y + 4);
+          }
+          x += colWidths[4];
+          
+          // UMUR
+          doc.text(String(umur), x + (colWidths[5] / 2), y + 4, { align: 'center' });
+          x += colWidths[5];
+          
+          // AGAMA
+          doc.text(agama, x + 1, y + 4);
+          x += colWidths[6];
+          
+          // PEKERJAAN
+          const pekerjaanLines = doc.splitTextToSize(pekerjaan, colWidths[7] - 2);
+          doc.text(pekerjaanLines[0] || pekerjaan, x + 1, y + 4);
+          x += colWidths[7];
+          
+          // PENDIDIKAN
+          const pendidikanLines = doc.splitTextToSize(pendidikan, colWidths[8] - 2);
+          doc.text(pendidikanLines[0] || pendidikan, x + 1, y + 4);
+          x += colWidths[8];
+          
+          // ALAMAT
+          const alamatLines = doc.splitTextToSize(alamat, colWidths[9] - 2);
+          doc.text(alamatLines[0] || alamat, x + 1, y + 4);
+          
+          // Draw row borders
+          doc.setDrawColor(0, 0, 0);
+          doc.setLineWidth(0.1);
+          doc.rect(margin, y, contentWidth, rowHeight);
+          
+          let lineX = margin;
+          for (let i = 0; i < colWidths.length - 1; i++) {
+            lineX += colWidths[i];
+            doc.line(lineX, y, lineX, y + rowHeight);
+          }
+          
+          y += rowHeight;
+        });
+      });
+      
+      // Add summary page at the end
+      doc.addPage();
+      currentPage++;
+      
+      doc.setFontSize(18);
+      doc.setFont(undefined, 'bold');
+      doc.text('RINGKASAN DATA SEMUA DUSUN', pageWidth / 2, 20, { align: 'center' });
+      
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      
+      const totalPenduduk = allData.length;
+      const totalLakiLaki = allData.filter(d => d['Jenis Kelamin'] === '1' || d['Jenis Kelamin']?.toLowerCase() === 'laki-laki').length;
+      const totalPerempuan = allData.filter(d => d['Jenis Kelamin'] === '2' || d['Jenis Kelamin']?.toLowerCase() === 'perempuan').length;
+      
+      let summaryY = 40;
+      
+      doc.text(`Total Penduduk: ${totalPenduduk} orang`, margin, summaryY);
+      summaryY += 8;
+      doc.text(`Laki-laki: ${totalLakiLaki} orang`, margin, summaryY);
+      summaryY += 8;
+      doc.text(`Perempuan: ${totalPerempuan} orang`, margin, summaryY);
+      summaryY += 8;
+      doc.text(`Jumlah Dusun: ${dusunNames.length}`, margin, summaryY);
+      summaryY += 15;
+      
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text('Rincian per Dusun:', margin, summaryY);
+      summaryY += 10;
+      
+      doc.setFontSize(9);
+      doc.setFont(undefined, 'normal');
+      
+      dusunNames.forEach((dusun, index) => {
+        const dusunData = allData.filter(d => d.dusun === dusun);
+        const lakiLaki = dusunData.filter(d => d['Jenis Kelamin'] === '1' || d['Jenis Kelamin']?.toLowerCase() === 'laki-laki').length;
+        const perempuan = dusunData.filter(d => d['Jenis Kelamin'] === '2' || d['Jenis Kelamin']?.toLowerCase() === 'perempuan').length;
+        
+        doc.text(`${index + 1}. ${dusun}: ${dusunData.length} orang (L: ${lakiLaki}, P: ${perempuan})`, margin + 5, summaryY);
+        summaryY += 6;
+        
+        if (summaryY > pageHeight - 20) {
+          doc.addPage();
+          currentPage++;
+          summaryY = 20;
+        }
+      });
+      
+      doc.setFontSize(8);
+      doc.text(`Halaman ${currentPage}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
+      
+      // Save PDF
+      const filename = `Data_Penduduk_SEMUA_DUSUN_${new Date().getTime()}.pdf`;
+      doc.save(filename);
+      
+      closeExportModal();
+      showToast(`PDF SEMUA DUSUN berhasil diunduh! Total ${dusunNames.length} dusun.`);
+    }
+
+    function exportDusunToPDF(dusun) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF('landscape', 'mm', 'a4');
+      
+      // Filter data by dusun
+      const dusunData = allData.filter(d => d.dusun === dusun);
+      
+      if (dusunData.length === 0) {
+        showToast('Tidak ada data untuk dusun ini');
+        return;
+      }
+      
+      showToast(`Membuat PDF untuk Dusun ${dusun}...`);
+      
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 10;
+      const contentWidth = pageWidth - (2 * margin);
+      
+      let currentPage = 1;
+      
+      function drawHeader(pageNum) {
+        // Header
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.text('DATA PENDUDUK', pageWidth / 2, 15, { align: 'center' });
+        
+        doc.setFontSize(12);
+        doc.text(`DUSUN: ${dusun.toUpperCase()}`, pageWidth / 2, 22, { align: 'center' });
+        
+        // Statistics
+        const lakiLaki = dusunData.filter(d => d['Jenis Kelamin'] === '1' || d['Jenis Kelamin']?.toLowerCase() === 'laki-laki').length;
+        const perempuan = dusunData.filter(d => d['Jenis Kelamin'] === '2' || d['Jenis Kelamin']?.toLowerCase() === 'perempuan').length;
+        
+        doc.setFontSize(9);
+        doc.setFont(undefined, 'normal');
+        doc.text(`Total: ${dusunData.length} | Laki-laki: ${lakiLaki} | Perempuan: ${perempuan}`, pageWidth / 2, 28, { align: 'center' });
+        doc.text(`Dicetak: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`, pageWidth / 2, 33, { align: 'center' });
+        
+        // Page number
+        doc.setFontSize(8);
+        doc.text(`Halaman ${pageNum}`, pageWidth - margin, pageHeight - 5, { align: 'right' });
+      }
+      
+      function drawTableHeader(startY) {
+        const colWidths = [8, 50, 28, 14, 35, 10, 25, 30, 30, 50];
+        let x = margin;
+        
+        doc.setFillColor(139, 0, 0);
+        doc.rect(margin, startY, contentWidth, 8, 'F');
+        
+        doc.setTextColor(255, 215, 0);
+        doc.setFontSize(7);
+        doc.setFont(undefined, 'bold');
+        
+        const headers = ['NO', 'NAMA', 'NIK', 'JK', 'TTL', 'UMUR', 'AGAMA', 'PEKERJAAN', 'PENDIDIKAN', 'ALAMAT'];
+        
+        headers.forEach((header, i) => {
+          doc.text(header, x + (colWidths[i] / 2), startY + 5.5, { align: 'center' });
+          x += colWidths[i];
+        });
+        
+        doc.setTextColor(0, 0, 0);
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.1);
+        doc.rect(margin, startY, contentWidth, 8);
+        
+        let lineX = margin;
+        for (let i = 0; i < colWidths.length - 1; i++) {
+          lineX += colWidths[i];
+          doc.line(lineX, startY, lineX, startY + 8);
+        }
+        
+        return startY + 8;
+      }
+      
+      drawHeader(currentPage);
+      let y = drawTableHeader(38);
+      
+      const colWidths = [8, 50, 28, 14, 35, 10, 25, 30, 30, 50];
+      const rowHeight = 6;
+      
+      dusunData.forEach((row, index) => {
+        if (y > pageHeight - 20) {
+          doc.addPage();
+          currentPage++;
+          drawHeader(currentPage);
+          y = drawTableHeader(38);
+        }
+        
+        const nama = row.nama || '-';
+        const nik = row.nik || '-';
+        const jenisKelamin = (row['Jenis Kelamin'] === '1' || row['Jenis Kelamin']?.toLowerCase() === 'laki-laki') ? 'L' : 'P';
+        const tempatLahir = row.tempatlahir || '-';
+        const tanggalLahir = row.tanggallahir || '-';
+        const umur = row.Umur || row.umur || '-';
+        const agama = row.agama || '-';
+        const pekerjaan = row.pekerjaan_id || '-';
+        const pendidikan = row.pendidikan_kk_id || '-';
+        const alamat = row.alamat || '-';
+        
+        const ttl = `${tempatLahir}, ${tanggalLahir}`;
+        
+        doc.setFontSize(6.5);
+        doc.setFont(undefined, 'normal');
+        
+        let x = margin;
+        
+        // NO
+        doc.text(String(index + 1), x + (colWidths[0] / 2), y + 4, { align: 'center' });
+        x += colWidths[0];
+        
+        // NAMA
+        const namaLines = doc.splitTextToSize(nama, colWidths[1] - 2);
+        doc.text(namaLines[0] || nama, x + 1, y + 4);
+        x += colWidths[1];
+        
+        // NIK
+        doc.text(nik, x + 1, y + 4);
+        x += colWidths[2];
+        
+        // JK
+        doc.text(jenisKelamin, x + (colWidths[3] / 2), y + 4, { align: 'center' });
+        x += colWidths[3];
+        
+        // TTL - Split into two lines if needed
+        const ttlLines = doc.splitTextToSize(ttl, colWidths[4] - 2);
+        if (ttlLines.length > 1) {
+          doc.text(ttlLines[0], x + 1, y + 2.5);
+          doc.text(ttlLines[1], x + 1, y + 5);
+        } else {
+          doc.text(ttlLines[0] || ttl, x + 1, y + 4);
+        }
+        x += colWidths[4];
+        
+        // UMUR
+        doc.text(String(umur), x + (colWidths[5] / 2), y + 4, { align: 'center' });
+        x += colWidths[5];
+        
+        // AGAMA
+        doc.text(agama, x + 1, y + 4);
+        x += colWidths[6];
+        
+        // PEKERJAAN
+        const pekerjaanLines = doc.splitTextToSize(pekerjaan, colWidths[7] - 2);
+        doc.text(pekerjaanLines[0] || pekerjaan, x + 1, y + 4);
+        x += colWidths[7];
+        
+        // PENDIDIKAN
+        const pendidikanLines = doc.splitTextToSize(pendidikan, colWidths[8] - 2);
+        doc.text(pendidikanLines[0] || pendidikan, x + 1, y + 4);
+        x += colWidths[8];
+        
+        // ALAMAT
+        const alamatLines = doc.splitTextToSize(alamat, colWidths[9] - 2);
+        doc.text(alamatLines[0] || alamat, x + 1, y + 4);
+        
+        // Draw row borders
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(0.1);
+        doc.rect(margin, y, contentWidth, rowHeight);
+        
+        let lineX = margin;
+        for (let i = 0; i < colWidths.length - 1; i++) {
+          lineX += colWidths[i];
+          doc.line(lineX, y, lineX, y + rowHeight);
+        }
+        
+        y += rowHeight;
+      });
+      
+      // Save PDF
+      const filename = `Data_Penduduk_${dusun.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().getTime()}.pdf`;
+      doc.save(filename);
+      
+      closeExportModal();
+      showToast(`PDF berhasil diunduh!`);
+    }
+
+    function displayResults(data) {
+      const resultsContainer = document.getElementById('results');
+      const loadingContainer = document.getElementById('loading');
+      const noResultsContainer = document.getElementById('no-results');
+      
+      loadingContainer.classList.add('hidden');
+      
+      if (data.length === 0) {
+        resultsContainer.innerHTML = '';
+        noResultsContainer.classList.remove('hidden');
+        return;
+      }
+      
+      noResultsContainer.classList.add('hidden');
+      
+      resultsContainer.innerHTML = data.map((row, index) => {
+        const nama = row.nama || '-';
+        const nik = row.nik || '-';
+        const jenisKelamin = row['Jenis Kelamin'] || '-';
+        const tempatLahir = row.tempatlahir || '-';
+        const tanggalLahir = row.tanggallahir || '-';
+        const alamat = row.alamat || '-';
+        const dusun = row.dusun || '-';
+        const foto = row.foto || '';
+        
+        const genderIcon = (jenisKelamin.toLowerCase() === 'perempuan' || jenisKelamin === '2') ? '👩' : '👨';
+        
+        return `
+          <div class="result-card rounded-xl p-6 shadow-lg cursor-pointer" data-index="${index}">
+            <div class="flex items-center gap-3 mb-4">
+              ${foto ? `
+                <img 
+                  src="${foto}" 
+                  alt="Foto ${nama}" 
+                  class="w-16 h-16 rounded-full object-cover border-2 border-gold-accent"
+                  onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+                />
+                <div class="text-3xl hidden">${genderIcon}</div>
+              ` : `
+                <div class="text-3xl">${genderIcon}</div>
+              `}
+              <div class="flex-1">
+                <h3 class="text-xl font-bold gold-accent">${nama}</h3>
+                <p class="text-gray-400 text-sm">NIK: ${nik}</p>
+              </div>
+            </div>
+            
+            <div class="space-y-2">
+              <div class="flex justify-between items-start border-b border-gray-700 pb-2">
+                <span class="text-gray-400 text-sm font-medium">Tempat/Tgl Lahir:</span>
+                <span class="text-white text-sm text-right ml-4 max-w-xs break-words">${tempatLahir}, ${tanggalLahir}</span>
+              </div>
+              <div class="flex justify-between items-start border-b border-gray-700 pb-2">
+                <span class="text-gray-400 text-sm font-medium">Alamat:</span>
+                <span class="text-white text-sm text-right ml-4 max-w-xs break-words">${alamat}</span>
+              </div>
+              <div class="flex justify-between items-start border-b border-gray-700 pb-2">
+                <span class="text-gray-400 text-sm font-medium">Dusun:</span>
+                <span class="text-white text-sm text-right ml-4">${dusun}</span>
+              </div>
+            </div>
+            
+            <div class="mt-4 text-center">
+              <span class="text-white text-sm font-bold">👆 Klik untuk lihat detail lengkap</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      // Add click event listeners to result cards
+      document.querySelectorAll('.result-card').forEach((card, index) => {
+        card.addEventListener('click', () => {
+          showModal(data[index]);
+        });
+      });
+    }
+
+    async function handleSearch(event) {
+      event.preventDefault();
+      
+      if (isLoading) return;
+      
+      const searchInput = document.getElementById('search-input');
+      const query = searchInput.value;
+      
+      const loadingContainer = document.getElementById('loading');
+      const resultsContainer = document.getElementById('results');
+      const noResultsContainer = document.getElementById('no-results');
+      
+      loadingContainer.classList.remove('hidden');
+      resultsContainer.innerHTML = '';
+      noResultsContainer.classList.add('hidden');
+      
+      if (allData.length === 0) {
+        isLoading = true;
+        allData = await fetchData();
+        isLoading = false;
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const results = searchData(query);
+      
+      // If search is empty, show all data in list
+      if (!query.trim()) {
+        displayResults(results);
+        displayStats(results);
+      }
+      // If only one result found from search, show modal directly
+      else if (results.length === 1) {
+        loadingContainer.classList.add('hidden');
+        showModal(results[0]);
+        displayStats(results);
+      } else {
+        // Multiple or no results, show list
+        displayResults(results);
+        displayStats(results);
+      }
+    }
+
+    function handleLogin(event) {
+      event.preventDefault();
+      
+      const passwordInput = document.getElementById('password-input');
+      const loginError = document.getElementById('login-error');
+      const loginScreen = document.getElementById('login-screen');
+      const appScreen = document.getElementById('app');
+      
+      const password = passwordInput.value.trim();
+      const correctPassword = '7203192010#';
+      
+      if (password === correctPassword) {
+        // Login successful
+        loginError.classList.add('hidden');
+        loginScreen.classList.add('hidden');
+        appScreen.classList.remove('hidden');
+        
+        // Store login state
+        sessionStorage.setItem('isLoggedIn', 'true');
+        
+        // Initialize main app
+        initializeMainApp();
+        
+        showToast('Login berhasil! Selamat datang Admin.');
+      } else {
+        // Login failed
+        loginError.classList.remove('hidden');
+        passwordInput.value = '';
+        passwordInput.focus();
+      }
+    }
+    
+    function handleLogout() {
+      const loginScreen = document.getElementById('login-screen');
+      const appScreen = document.getElementById('app');
+      
+      // Clear login state
+      sessionStorage.removeItem('isLoggedIn');
+      
+      // Show login screen
+      appScreen.classList.add('hidden');
+      loginScreen.classList.remove('hidden');
+      
+      // Clear password input
+      document.getElementById('password-input').value = '';
+      
+      showToast('Anda telah keluar dari sistem.');
+    }
+    
+    async function initializeMainApp() {
+      const searchForm = document.getElementById('search-form');
+      const searchInput = document.getElementById('search-input');
+      const clearSearchBtn = document.getElementById('clear-search');
+      
+      searchForm.addEventListener('submit', handleSearch);
+      
+      // Show/hide clear button based on input
+      searchInput.addEventListener('input', () => {
+        if (searchInput.value.trim()) {
+          clearSearchBtn.classList.remove('hidden');
+        } else {
+          clearSearchBtn.classList.add('hidden');
+        }
+      });
+      
+      // Clear search functionality
+      clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        clearSearchBtn.classList.add('hidden');
+        searchInput.focus();
+        
+        // Reset to show all data
+        displayResults(allData);
+        displayStats(allData);
+        
+        showToast('Pencarian dihapus');
+      });
+      
+      // Add export button listener
+      const exportButton = document.getElementById('export-button');
+      exportButton.addEventListener('click', showExportModal);
+      
+      // Add modal close listeners
+      const closeModalBtn = document.getElementById('close-modal');
+      const modalOverlay = document.getElementById('modal-overlay');
+      
+      closeModalBtn.addEventListener('click', closeModal);
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+          closeModal();
+        }
+      });
+      
+      // Add export modal close listeners
+      const closeExportModalBtn = document.getElementById('close-export-modal');
+      const exportModalOverlay = document.getElementById('export-modal-overlay');
+      
+      closeExportModalBtn.addEventListener('click', closeExportModal);
+      exportModalOverlay.addEventListener('click', (e) => {
+        if (e.target === exportModalOverlay) {
+          closeExportModal();
+        }
+      });
+      
+      // Load data
+      isLoading = true;
+      document.getElementById('loading').classList.remove('hidden');
+      allData = await fetchData();
+      isLoading = false;
+      displayResults(allData);
+      displayStats(allData);
+      
+      // Generate alphabet filter buttons
+      generateAlphabetFilter();
+      
+      // Initialize dropdown with all names
+      updateDropdownOptions('ALL');
+    }
+
+    async function initialize() {
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange,
+          mapToCapabilities,
+          mapToEditPanelValues
+        });
+      }
+      
+      // Check if already logged in
+      const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+      
+      if (isLoggedIn) {
+        // Show app directly
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('app').classList.remove('hidden');
+        initializeMainApp();
+      } else {
+        // Show login screen
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('app').classList.add('hidden');
+      }
+      
+      // Add login form listener
+      const loginForm = document.getElementById('login-form');
+      loginForm.addEventListener('submit', handleLogin);
+      
+      // Add logout button listener
+      const logoutButton = document.getElementById('logout-button');
+      logoutButton.addEventListener('click', handleLogout);
+      
+      // Add toggle password visibility
+      const togglePassword = document.getElementById('toggle-password');
+      const passwordInput = document.getElementById('password-input');
+      
+      togglePassword.addEventListener('click', () => {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        togglePassword.textContent = type === 'password' ? '👁️' : '🙈';
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initialize);
+    } else {
+      initialize();
+    }
+  </script>
 </body>
 </html>
