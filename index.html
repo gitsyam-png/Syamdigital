@@ -3,112 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Syamdigital - Database System</title>
+    <title>Syamdigital. - Database Pro</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Tambahan SweetAlert2 untuk Notifikasi Keren -->
     <script src="https://cdn.jsdelivr.net"></script>
 </head>
 <body class="bg-[#0f172a] text-slate-200 min-h-screen font-sans">
-    
     <nav class="bg-slate-800/50 border-b border-slate-700 p-4 sticky top-0 z-50 backdrop-blur-md">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <span class="text-xl font-bold tracking-tighter">SYAM<span class="text-blue-500 italic">DIGITAL.</span></span>
-            <span class="text-[10px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full border border-blue-500/30 uppercase font-bold tracking-widest">Database Active</span>
+            <span class="text-xl font-bold tracking-tighter uppercase italic">SYAM<span class="text-blue-500">DIGITAL.</span></span>
+            <span class="text-[10px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full border border-blue-500/30 uppercase font-bold tracking-widest italic shadow-lg shadow-blue-900/20">Neon Database System</span>
         </div>
     </nav>
 
-    <main class="max-w-4xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <!-- FORM TAMBAH USER -->
-        <section class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl h-fit">
-            <h2 class="text-lg font-bold mb-4 text-blue-400 uppercase tracking-widest">Tambah User Baru</h2>
+    <main class="max-w-4xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-10">
+        <!-- 1. FORM TAMBAH (ADD) -->
+        <section class="bg-slate-800 p-6 rounded-3xl border border-slate-700 shadow-2xl h-fit">
+            <h2 class="text-lg font-bold mb-4 text-blue-400 uppercase tracking-widest italic">Opsi 1: Tambah User</h2>
             <form id="userForm" class="space-y-4">
-                <input type="text" id="nama" placeholder="Nama Lengkap" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition" required>
-                <input type="email" id="email" placeholder="Email @syamdigital.com" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition" required>
-                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 p-3 rounded-xl font-bold text-white transition transform active:scale-95 shadow-lg shadow-blue-900/20">SIMPAN KE NEON</button>
+                <input type="text" id="nama" placeholder="Nama Lengkap" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:border-blue-500 outline-none transition shadow-inner" required>
+                <input type="email" id="email" placeholder="Email@syamdigital.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:border-blue-500 outline-none transition shadow-inner" required>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 p-3 rounded-xl font-bold text-white transition transform active:scale-95 shadow-xl shadow-blue-900/40 uppercase italic tracking-wider">SIMPAN KE NEON</button>
             </form>
         </section>
 
-        <!-- DAFTAR USER & TOMBOL HAPUS -->
+        <!-- 2. DAFTAR & SEARCH (DELETE OPTION) -->
         <section>
-            <h2 class="text-lg font-bold mb-4 text-blue-400 flex justify-between items-center">
-                <span>DAFTAR AKTIF</span>
-                <span id="loading" class="hidden text-[10px] text-yellow-500 animate-pulse font-bold border border-yellow-900/50 px-2 py-1 rounded tracking-widest uppercase">Syncing...</span>
-            </h2>
-            <div id="user-list" class="space-y-3">
-                <!-- Data dari Neon akan muncul di sini -->
+            <div class="flex justify-between items-end mb-4">
+                <h2 class="text-lg font-bold text-blue-400 uppercase tracking-widest italic">Opsi 2: Daftar & Hapus</h2>
+                <span id="loading" class="hidden text-[10px] text-yellow-500 animate-pulse font-bold italic tracking-widest uppercase bg-yellow-900/20 px-2 py-1 rounded">Syncing...</span>
+            </div>
+
+            <!-- FITUR SEARCH -->
+            <div class="relative mb-6">
+                <input type="text" id="searchInput" onkeyup="filterUsers()" placeholder="Cari nama atau email..." 
+                       class="w-full bg-slate-800/60 border border-slate-700 rounded-2xl py-3 pl-4 pr-10 text-sm focus:outline-none focus:border-blue-500 transition shadow-lg italic">
+                <span class="absolute right-4 top-3 text-slate-500">🔍</span>
+            </div>
+
+            <div id="user-list" class="space-y-4">
+                <!-- Data akan dimunculkan di sini -->
             </div>
         </section>
     </main>
 
     <script>
+        let allUsers = []; // Variabel untuk menampung data pencarian
         const userForm = document.getElementById('userForm');
         const userList = document.getElementById('user-list');
         const loading = document.getElementById('loading');
+        const searchInput = document.getElementById('searchInput');
 
-        // 1. FUNGSI AMBIL DATA (READ)
+        // AMBIL DATA DARI NEON
         async function loadUsers() {
             loading.classList.remove('hidden');
             try {
                 const res = await fetch('/api/get-users');
-                const data = await res.json();
-                
-                if (data.length === 0) {
-                    userList.innerHTML = `<p class="text-slate-500 italic text-center py-10 border border-dashed border-slate-700 rounded-2xl text-sm">Database Kosong</p>`;
-                    return;
-                }
-
-                userList.innerHTML = data.map(u => `
-                    <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-blue-500/40 transition shadow-md">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-blue-500 font-bold border border-slate-700 uppercase shadow-inner">${(u.nama || 'U').charAt(0)}</div>
-                            <div>
-                                <div class="font-bold text-white uppercase text-sm">${u.nama}</div>
-                                <div class="text-slate-500 text-[10px] italic">${u.email}</div>
-                            </div>
-                        </div>
-                        <button onclick="deleteUser(${u.id})" class="bg-red-500/10 hover:bg-red-600 text-red-500 hover:text-white px-4 py-2 rounded-lg text-[10px] font-bold border border-red-500/20 transition uppercase tracking-tighter">Hapus</button>
-                    </div>
-                `).join('');
-            } catch (e) {
-                console.error("Gagal load:", e);
-            } finally {
-                loading.classList.add('hidden');
-            }
+                allUsers = await res.json();
+                renderUsers(allUsers);
+            } catch (e) { console.error(e); }
+            finally { loading.classList.add('hidden'); }
         }
 
-        // 2. FUNGSI TAMBAH DATA (CREATE)
+        // TAMPILKAN DATA (RENDER)
+        function renderUsers(users) {
+            if (users.length === 0) {
+                userList.innerHTML = `<p class="text-slate-500 italic text-center py-10 border border-dashed border-slate-700 rounded-3xl text-sm">Data tidak ditemukan...</p>`;
+                return;
+            }
+            userList.innerHTML = users.map(u => `
+                <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700 flex justify-between items-center group hover:border-blue-500/50 transition shadow-md">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-blue-500 font-bold border border-slate-700 uppercase">${u.nama.charAt(0)}</div>
+                        <div>
+                            <div class="font-bold text-white uppercase text-sm">${u.nama}</div>
+                            <div class="text-slate-500 text-[10px] italic font-light">${u.email}</div>
+                        </div>
+                    </div>
+                    <button onclick="deleteUser(${u.id})" class="bg-red-500/10 hover:bg-red-600 text-red-500 hover:text-white px-4 py-2 rounded-xl text-[10px] font-bold border border-red-500/20 transition uppercase tracking-tighter shadow-lg shadow-red-900/10">Hapus</button>
+                </div>
+            `).join('');
+        }
+
+        // FITUR PENCARIAN (SEARCH)
+        function filterUsers() {
+            const keyword = searchInput.value.toLowerCase();
+            const filtered = allUsers.filter(u => 
+                u.nama.toLowerCase().includes(keyword) || 
+                u.email.toLowerCase().includes(keyword)
+            );
+            renderUsers(filtered);
+        }
+
+        // OPSYEN 1: TAMBAH DATA
         userForm.onsubmit = async (e) => {
             e.preventDefault();
             loading.classList.remove('hidden');
             const nama = document.getElementById('nama').value;
             const email = document.getElementById('email').value;
 
-            try {
-                const res = await fetch('/api/add-user', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ nama, email })
-                });
+            const res = await fetch('/api/add-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nama, email })
+            });
 
-                if (res.ok) {
-                    userForm.reset();
-                    loadUsers();
-                    // Notifikasi Sukses
-                    Swal.fire({
-                        icon: 'success', title: 'Berhasil!', text: 'User baru sudah tersimpan di Neon.',
-                        background: '#1e293b', color: '#f1f5f9', timer: 1500, showConfirmButton: false
-                    });
-                }
-            } catch (err) {
-                Swal.fire('Error', 'Gagal simpan!', 'error');
-            } finally {
-                loading.classList.add('hidden');
+            if (res.ok) {
+                userForm.reset();
+                loadUsers();
+                Swal.fire({
+                    icon: 'success', title: 'BERHASIL!', text: 'User tersimpan di Neon Database.',
+                    background: '#1e293b', color: '#f1f5f9', timer: 1500, showConfirmButton: false
+                });
+            } else {
+                Swal.fire('GAGAL!', 'Periksa Database URL di Vercel.', 'error');
             }
+            loading.classList.add('hidden');
         };
 
-        // 3. FUNGSI HAPUS DATA (DELETE)
+        // OPSYEN 2: HAPUS DATA
         async function deleteUser(id) {
-            // Popup Konfirmasi Premium
             const result = await Swal.fire({
                 title: 'Hapus User?', text: "Data di Neon akan hilang selamanya!", icon: 'warning',
                 showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#334155',
@@ -122,16 +135,16 @@
                 if (res.ok) {
                     loadUsers();
                     Swal.fire({
-                        icon: 'success', title: 'Terhapus!', background: '#1e293b', color: '#f1f5f9',
+                        icon: 'success', title: 'TERHAPUS!', background: '#1e293b', color: '#f1f5f9',
                         timer: 1000, showConfirmButton: false
                     });
                 } else {
                     Swal.fire('Gagal!', 'Data tidak bisa dihapus.', 'error');
                 }
+                loading.classList.add('hidden');
             }
         }
 
-        // Jalankan saat pertama buka web
         loadUsers();
     </script>
 </body>
