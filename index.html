@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <script src="https://cdn.jsdelivr.net"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Syamdigital. Database Pro</title>
@@ -156,12 +157,41 @@
 
         // 7. DELETE
         async function deleteUser(id) {
-            if (!confirm("Hapus data ini secara permanen?")) return;
-            const res = await fetch('/api/delete-user?id=' + id, { method: 'DELETE' });
-            if (res.ok) loadUsers();
-        }
+    // Popup Konfirmasi Premium
+    const result = await Swal.fire({
+        title: 'Hapus Data?',
+        text: "Data yang dihapus tidak bisa dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        background: '#1e293b', // Warna gelap sesuai tema Syamdigital
+        color: '#f1f5f9'
+    });
 
-        loadUsers();
+    if (result.isConfirmed) {
+        loading.classList.remove('hidden');
+        const res = await fetch('/api/delete-user?id=' + id, { method: 'DELETE' });
+        
+        if (res.ok) {
+            Swal.fire({
+                title: 'Terhapus!',
+                text: 'User berhasil dibuang.',
+                icon: 'success',
+                background: '#1e293b',
+                color: '#f1f5f9',
+                timer: 1500,
+                showConfirmButton: false
+            });
+            loadUsers();
+        } else {
+            Swal.fire('Gagal!', 'Terjadi kesalahan sistem.', 'error');
+        }
+    }
+}
+
     </script>
 </body>
 </html>
