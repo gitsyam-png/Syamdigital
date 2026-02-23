@@ -2,45 +2,56 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Syamdigital - Data Asli</title>
+    <title>Syamdigital - Input Data</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-white p-10">
-    <div class="max-w-lg mx-auto bg-gray-800 p-6 rounded-xl shadow-2xl border border-blue-500">
-        <h1 class="text-xl font-bold text-blue-400 mb-4 tracking-widest text-center uppercase">Database Syamdigital</h1>
+<body class="bg-gray-900 text-white p-6 font-sans">
+    <div class="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-xl border border-blue-500">
+        <h1 class="text-xl font-bold mb-4 text-blue-400">TAMBAH USER BARU</h1>
         
-        <div id="loading" class="text-center py-4 text-gray-400">Menghubungkan ke Neon PostgreSQL...</div>
-        
-        <ul id="user-list" class="space-y-3"></ul>
+        <!-- FORM INPUT -->
+        <form id="userForm" class="space-y-3 mb-8">
+            <input type="text" id="nama" placeholder="Nama Lengkap" class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500" required>
+            <input type="email" id="email" placeholder="Email" class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500" required>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold transition">SIMPAN KE NEON</button>
+        </form>
+
+        <h2 class="text-lg font-semibold mb-2 border-b border-gray-700">DAFTAR USER</h2>
+        <ul id="user-list" class="text-sm space-y-2 py-2"></ul>
     </div>
 
     <script>
-        async function fetchRealData() {
-            try {
-                // Memanggil file api/get-users.js yang kita buat tadi
-                const res = await fetch('/api/get-users');
-                const data = await res.json();
-                
-                document.getElementById('loading').classList.add('hidden');
-                const list = document.getElementById('user-list');
+        const userForm = document.getElementById('userForm');
+        const userList = document.getElementById('user-list');
 
-                if (data.length === 0) {
-                    list.innerHTML = "<li class='text-center text-yellow-500'>Data di Neon masih kosong!</li>";
-                    return;
-                }
-
-                data.forEach(user => {
-                    list.innerHTML += `
-                        <li class="bg-gray-700 p-3 rounded border-l-4 border-blue-500 shadow">
-                            <div class="font-bold text-blue-300">${user.nama || user.name}</div>
-                            <div class="text-sm text-gray-400">${user.email}</div>
-                        </li>`;
-                });
-            } catch (err) {
-                document.getElementById('loading').innerHTML = "Gagal Konek: " + err.message;
-            }
+        // 1. FUNGSI AMBIL DATA
+        async function loadUsers() {
+            const res = await fetch('/api/get-users');
+            const data = await res.json();
+            userList.innerHTML = data.map(u => `<li class="bg-gray-700 p-2 rounded opacity-80">${u.nama} - <span class="text-gray-400">${u.email}</span></li>`).join('');
         }
-        fetchRealData();
+
+        // 2. FUNGSI KIRIM DATA
+        userForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const nama = document.getElementById('nama').value;
+            const email = document.getElementById('email').value;
+
+            const res = await fetch('/api/add-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nama, email })
+            });
+
+            if (res.ok) {
+                userForm.reset();
+                loadUsers(); // Refresh daftar otomatis
+            } else {
+                alert("Gagal simpan! Cek koneksi Neon.");
+            }
+        };
+
+        loadUsers();
     </script>
 </body>
 </html>
