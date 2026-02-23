@@ -1,197 +1,138 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <script src="https://cdn.jsdelivr.net"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Syamdigital. Database Pro</title>
+    <title>Syamdigital - Database System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tambahan SweetAlert2 untuk Notifikasi Keren -->
+    <script src="https://cdn.jsdelivr.net"></script>
 </head>
 <body class="bg-[#0f172a] text-slate-200 min-h-screen font-sans">
+    
     <nav class="bg-slate-800/50 border-b border-slate-700 p-4 sticky top-0 z-50 backdrop-blur-md">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <span class="text-xl font-bold tracking-tighter uppercase">SYAM<span class="text-blue-500 italic">DIGITAL.</span></span>
-            <span class="text-[10px] bg-green-500/20 text-green-400 px-3 py-1 rounded-full border border-green-500/30 uppercase font-bold tracking-widest">Database Active</span>
+            <span class="text-xl font-bold tracking-tighter">SYAM<span class="text-blue-500 italic">DIGITAL.</span></span>
+            <span class="text-[10px] bg-blue-500/20 text-blue-400 px-3 py-1 rounded-full border border-blue-500/30 uppercase font-bold tracking-widest">Database Active</span>
         </div>
     </nav>
 
-    <main class="max-w-5xl mx-auto p-6 grid grid-cols-1 md:grid-cols-12 gap-8">
-        
-        <!-- LEFT: FORM INPUT -->
-        <section class="md:col-span-5 bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl h-fit">
-            <h2 id="formTitle" class="text-lg font-bold mb-4 text-blue-400 uppercase tracking-widest">Input User</h2>
+    <main class="max-w-4xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- FORM TAMBAH USER -->
+        <section class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl h-fit">
+            <h2 class="text-lg font-bold mb-4 text-blue-400 uppercase tracking-widest">Tambah User Baru</h2>
             <form id="userForm" class="space-y-4">
-                <input type="hidden" id="userId">
                 <input type="text" id="nama" placeholder="Nama Lengkap" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition" required>
-                <input type="email" id="email" placeholder="Email" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition" required>
-                
-                <div class="flex gap-2 pt-2">
-                    <button type="submit" id="btnSubmit" class="flex-1 bg-blue-600 hover:bg-blue-500 p-3 rounded-xl font-bold text-white transition transform active:scale-95 shadow-lg shadow-blue-900/20">SIMPAN DATA</button>
-                    <button type="button" id="btnCancel" onclick="resetForm()" class="hidden bg-slate-700 hover:bg-slate-600 p-3 rounded-xl font-bold transition">BATAL</button>
-                </div>
+                <input type="email" id="email" placeholder="Email @syamdigital.com" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition" required>
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 p-3 rounded-xl font-bold text-white transition transform active:scale-95 shadow-lg shadow-blue-900/20">SIMPAN KE NEON</button>
             </form>
         </section>
 
-        <!-- RIGHT: DAFTAR USER + SEARCH -->
-        <section class="md:col-span-7">
-            <div class="mb-6 space-y-4">
-                <div class="flex justify-between items-end">
-                    <div>
-                        <h2 class="text-xl font-bold text-white">DAFTAR AKTIF</h2>
-                        <p class="text-xs text-slate-500 italic">Terhubung ke Neon.tech</p>
-                    </div>
-                    <span id="loading" class="hidden text-[10px] text-yellow-500 animate-pulse font-bold border border-yellow-900/50 px-2 py-1 rounded">SYNCING...</span>
-                </div>
-
-                <!-- [BARU] KOTAK PENCARIAN -->
-                <div class="relative group">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span class="text-slate-500 text-sm">🔍</span>
-                    </div>
-                    <input type="text" id="searchInput" onkeyup="filterUsers()" placeholder="Cari nama user..." 
-                           class="w-full bg-slate-800/40 border border-slate-700 rounded-xl py-2 pl-10 pr-4 text-sm focus:outline-none focus:border-blue-500 transition shadow-inner">
-                </div>
-            </div>
-
+        <!-- DAFTAR USER & TOMBOL HAPUS -->
+        <section>
+            <h2 class="text-lg font-bold mb-4 text-blue-400 flex justify-between items-center">
+                <span>DAFTAR AKTIF</span>
+                <span id="loading" class="hidden text-[10px] text-yellow-500 animate-pulse font-bold border border-yellow-900/50 px-2 py-1 rounded tracking-widest uppercase">Syncing...</span>
+            </h2>
             <div id="user-list" class="space-y-3">
-                <!-- Data akan muncul di sini -->
+                <!-- Data dari Neon akan muncul di sini -->
             </div>
         </section>
     </main>
 
     <script>
-        let allUsers = []; // Tempat simpan data sementara untuk fitur search
-
         const userForm = document.getElementById('userForm');
         const userList = document.getElementById('user-list');
         const loading = document.getElementById('loading');
-        const btnSubmit = document.getElementById('btnSubmit');
-        const btnCancel = document.getElementById('btnCancel');
-        const formTitle = document.getElementById('formTitle');
-        const searchInput = document.getElementById('searchInput');
 
-        // 1. LOAD DATA
+        // 1. FUNGSI AMBIL DATA (READ)
         async function loadUsers() {
             loading.classList.remove('hidden');
             try {
                 const res = await fetch('/api/get-users');
-                allUsers = await res.json(); // Simpan ke variabel global
-                renderUsers(allUsers);
-            } catch (e) { console.error(e); }
-            finally { loading.classList.add('hidden'); }
-        }
+                const data = await res.json();
+                
+                if (data.length === 0) {
+                    userList.innerHTML = `<p class="text-slate-500 italic text-center py-10 border border-dashed border-slate-700 rounded-2xl text-sm">Database Kosong</p>`;
+                    return;
+                }
 
-        // 2. RENDER DATA KE LAYAR
-        function renderUsers(users) {
-            if (users.length === 0) {
-                userList.innerHTML = `<p class="text-slate-500 italic text-center py-10 border border-dashed border-slate-700 rounded-2xl text-sm">Data tidak ditemukan...</p>`;
-                return;
-            }
-            userList.innerHTML = users.map(u => `
-                <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-blue-500/50 transition shadow-md">
-                    <div class="cursor-pointer flex-1" onclick="prepareEdit(${u.id}, '${u.nama}', '${u.email}')">
+                userList.innerHTML = data.map(u => `
+                    <div class="bg-slate-800/60 p-4 rounded-xl border border-slate-700 flex justify-between items-center group hover:border-blue-500/40 transition shadow-md">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 bg-blue-900/30 rounded-full flex items-center justify-center text-blue-400 font-bold text-xs border border-blue-800/50 uppercase">${u.nama.charAt(0)}</div>
+                            <div class="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center text-blue-500 font-bold border border-slate-700 uppercase shadow-inner">${(u.nama || 'U').charAt(0)}</div>
                             <div>
-                                <div class="font-bold text-white uppercase text-sm group-hover:text-blue-400 transition">${u.nama}</div>
-                                <div class="text-slate-500 text-[10px] font-light italic">${u.email}</div>
+                                <div class="font-bold text-white uppercase text-sm">${u.nama}</div>
+                                <div class="text-slate-500 text-[10px] italic">${u.email}</div>
                             </div>
                         </div>
+                        <button onclick="deleteUser(${u.id})" class="bg-red-500/10 hover:bg-red-600 text-red-500 hover:text-white px-4 py-2 rounded-lg text-[10px] font-bold border border-red-500/20 transition uppercase tracking-tighter">Hapus</button>
                     </div>
-                    <button onclick="deleteUser(${u.id})" class="bg-red-500/10 hover:bg-red-600 text-red-500 hover:text-white px-3 py-1.5 rounded-lg text-[10px] font-bold border border-red-500/20 transition uppercase ml-2">Hapus</button>
-                </div>
-            `).join('');
+                `).join('');
+            } catch (e) {
+                console.error("Gagal load:", e);
+            } finally {
+                loading.classList.add('hidden');
+            }
         }
 
-        // 3. [BARU] FITUR SEARCH REAL-TIME
-        function filterUsers() {
-            const keyword = searchInput.value.toLowerCase();
-            const filtered = allUsers.filter(u => 
-                u.nama.toLowerCase().includes(keyword) || 
-                u.email.toLowerCase().includes(keyword)
-            );
-            renderUsers(filtered);
-        }
-
-        // 4. PREPARE EDIT
-        function prepareEdit(id, nama, email) {
-            document.getElementById('userId').value = id;
-            document.getElementById('nama').value = nama;
-            document.getElementById('email').value = email;
-            formTitle.innerText = "Edit User";
-            btnSubmit.innerText = "UPDATE DATA";
-            btnSubmit.classList.replace('bg-blue-600', 'bg-orange-600');
-            btnCancel.classList.remove('hidden');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // 5. RESET FORM
-        function resetForm() {
-            userForm.reset();
-            document.getElementById('userId').value = "";
-            formTitle.innerText = "Input User";
-            btnSubmit.innerText = "SIMPAN DATA";
-            btnSubmit.classList.replace('bg-orange-600', 'bg-blue-600');
-            btnCancel.classList.add('hidden');
-        }
-
-        // 6. SIMPAN / UPDATE
+        // 2. FUNGSI TAMBAH DATA (CREATE)
         userForm.onsubmit = async (e) => {
             e.preventDefault();
-            const id = document.getElementById('userId').value;
+            loading.classList.remove('hidden');
             const nama = document.getElementById('nama').value;
             const email = document.getElementById('email').value;
-            const url = id ? '/api/update-user' : '/api/add-user';
-            const method = id ? 'PUT' : 'POST';
 
-            loading.classList.remove('hidden');
-            const res = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, nama, email })
-            });
+            try {
+                const res = await fetch('/api/add-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nama, email })
+                });
 
-            if (res.ok) { resetForm(); loadUsers(); } 
-            else { alert("Gagal!"); loading.classList.add('hidden'); }
+                if (res.ok) {
+                    userForm.reset();
+                    loadUsers();
+                    // Notifikasi Sukses
+                    Swal.fire({
+                        icon: 'success', title: 'Berhasil!', text: 'User baru sudah tersimpan di Neon.',
+                        background: '#1e293b', color: '#f1f5f9', timer: 1500, showConfirmButton: false
+                    });
+                }
+            } catch (err) {
+                Swal.fire('Error', 'Gagal simpan!', 'error');
+            } finally {
+                loading.classList.add('hidden');
+            }
         };
 
-        // 7. DELETE
+        // 3. FUNGSI HAPUS DATA (DELETE)
         async function deleteUser(id) {
-    // Popup Konfirmasi Premium
-    const result = await Swal.fire({
-        title: 'Hapus Data?',
-        text: "Data yang dihapus tidak bisa dikembalikan!",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Ya, Hapus!',
-        cancelButtonText: 'Batal',
-        background: '#1e293b', // Warna gelap sesuai tema Syamdigital
-        color: '#f1f5f9'
-    });
-
-    if (result.isConfirmed) {
-        loading.classList.remove('hidden');
-        const res = await fetch('/api/delete-user?id=' + id, { method: 'DELETE' });
-        
-        if (res.ok) {
-            Swal.fire({
-                title: 'Terhapus!',
-                text: 'User berhasil dibuang.',
-                icon: 'success',
-                background: '#1e293b',
-                color: '#f1f5f9',
-                timer: 1500,
-                showConfirmButton: false
+            // Popup Konfirmasi Premium
+            const result = await Swal.fire({
+                title: 'Hapus User?', text: "Data di Neon akan hilang selamanya!", icon: 'warning',
+                showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#334155',
+                confirmButtonText: 'Ya, Hapus!', cancelButtonText: 'Batal',
+                background: '#1e293b', color: '#f1f5f9'
             });
-            loadUsers();
-        } else {
-            Swal.fire('Gagal!', 'Terjadi kesalahan sistem.', 'error');
-        }
-    }
-}
 
+            if (result.isConfirmed) {
+                loading.classList.remove('hidden');
+                const res = await fetch('/api/delete-user?id=' + id, { method: 'DELETE' });
+                if (res.ok) {
+                    loadUsers();
+                    Swal.fire({
+                        icon: 'success', title: 'Terhapus!', background: '#1e293b', color: '#f1f5f9',
+                        timer: 1000, showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('Gagal!', 'Data tidak bisa dihapus.', 'error');
+                }
+            }
+        }
+
+        // Jalankan saat pertama buka web
+        loadUsers();
     </script>
 </body>
 </html>
