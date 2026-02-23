@@ -91,5 +91,23 @@
         // Jalankan saat halaman dibuka
         loadUsers();
     </script>
+<script>
+async function deleteUser(id) {
+    if (!confirm("Yakin data ini mau dibuang?")) return;
+
+    // Opsional: Tampilkan loading
+    loading.classList.remove('hidden');
+
+    const res = await fetch(`/api/delete-user?id=${id}`, { method: 'DELETE' });
+    
+    if (res.ok) {
+        loadUsers(); // Refresh daftar
+    } else {
+        alert("Gagal menghapus!");
+        loading.classList.add('hidden');
+    }
+}
+
+</script>
 </body>
 </html>
