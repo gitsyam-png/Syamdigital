@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Syamdigital - Data Asli</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-10">
+    <div class="max-w-lg mx-auto bg-gray-800 p-6 rounded-xl shadow-2xl border border-blue-500">
+        <h1 class="text-xl font-bold text-blue-400 mb-4 tracking-widest text-center uppercase">Database Syamdigital</h1>
+        
+        <div id="loading" class="text-center py-4 text-gray-400">Menghubungkan ke Neon PostgreSQL...</div>
+        
+        <ul id="user-list" class="space-y-3"></ul>
+    </div>
+
+    <script>
+        async function fetchRealData() {
+            try {
+                // Memanggil file api/get-users.js yang kita buat tadi
+                const res = await fetch('/api/get-users');
+                const data = await res.json();
+                
+                document.getElementById('loading').classList.add('hidden');
+                const list = document.getElementById('user-list');
+
+                if (data.length === 0) {
+                    list.innerHTML = "<li class='text-center text-yellow-500'>Data di Neon masih kosong!</li>";
+                    return;
+                }
+
+                data.forEach(user => {
+                    list.innerHTML += `
+                        <li class="bg-gray-700 p-3 rounded border-l-4 border-blue-500 shadow">
+                            <div class="font-bold text-blue-300">${user.nama || user.name}</div>
+                            <div class="text-sm text-gray-400">${user.email}</div>
+                        </li>`;
+                });
+            } catch (err) {
+                document.getElementById('loading').innerHTML = "Gagal Konek: " + err.message;
+            }
+        }
+        fetchRealData();
+    </script>
+</body>
+</html>
