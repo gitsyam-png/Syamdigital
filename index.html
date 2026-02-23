@@ -1,3 +1,98 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Syamdigital. - CRUD System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white p-6 font-sans">
+    <div class="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-xl border border-blue-500">
+        <h1 class="text-xl font-bold mb-4 text-blue-400 uppercase tracking-wider text-center border-b border-blue-900 pb-2">Syamdigital Database</h1>
+        
+        <!-- FORM INPUT -->
+        <form id="userForm" class="space-y-3 mb-8">
+            <input type="text" id="nama" placeholder="Nama Lengkap" class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500 text-white" required>
+            <input type="email" id="email" placeholder="Email" class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500 text-white" required>
+            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold transition shadow-lg shadow-blue-900">SIMPAN KE NEON</button>
+        </form>
+
+        <h2 class="text-lg font-semibold mb-3 text-blue-300 flex justify-between items-center">
+            <span>DAFTAR USER</span>
+            <span id="loading" class="text-xs text-yellow-500 hidden italic">Syncing...</span>
+        </h2>
+        <ul id="user-list" class="text-sm space-y-3 py-2"></ul>
+    </div>
+
+    <script>
+        const userForm = document.getElementById('userForm');
+        const userList = document.getElementById('user-list');
+        const loading = document.getElementById('loading');
+
+        // 1. FUNGSI LOAD DATA (READ)
+        async function loadUsers() {
+            loading.classList.remove('hidden');
+            try {
+                const res = await fetch('/api/get-users');
+                const data = await res.json();
+                
+                userList.innerHTML = data.map(u => {
+                    const displayNama = u.nama || u.name || 'Tanpa Nama';
+                    const displayEmail = u.email || 'Tanpa Email';
+                    return `
+                        <li class="bg-gray-700 p-3 rounded border-l-4 border-blue-500 flex justify-between items-center shadow-md hover:bg-gray-600 transition">
+                            <div>
+                                <div class="font-bold text-blue-100 uppercase text-xs">${displayNama}</div>
+                                <div class="text-gray-400 text-[10px] italic">${displayEmail}</div>
+                            </div>
+                            <button onclick="deleteUser(${u.id})" class="bg-red-600 hover:bg-red-800 text-[10px] text-white px-2 py-1 rounded shadow transition font-bold uppercase">
+                                Hapus
+                            </button>
+                        </li>`;
+                }).join('');
+            } catch (err) {
+                console.error("Gagal load data:", err);
+            } finally {
+                loading.classList.add('hidden');
+            }
+        }
+
+        // 2. FUNGSI TAMBAH DATA (CREATE)
+        userForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const nama = document.getElementById('nama').value;
+            const email = document.getElementById('email').value;
+
+            const res = await fetch('/api/add-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nama, email })
+            });
+
+            if (res.ok) {
+                userForm.reset();
+                loadUsers();
+            } else {
+                alert("Gagal simpan! Cek Database_URL di Vercel.");
+            }
+        };
+
+        // 3. FUNGSI HAPUS DATA (DELETE)
+        async function deleteUser(id) {
+            if (!confirm("Yakin data ini mau dibuang?")) return;
+
+            const res = await fetch(\`/api/delete-user?id=\${id}\`, { method: 'DELETE' });
+            if (res.ok) {
+                loadUsers();
+            } else {
+                alert("Gagal menghapus!");
+            }
+        }
+
+        // Jalankan saat halaman dibuka
+        loadUsers();
+    </script>
+<script>
 async function deleteUser(id) {
     if (!confirm("Yakin data ini mau dibuang?")) return;
 
@@ -13,3 +108,6 @@ async function deleteUser(id) {
         alert("Gagal: " + (errorData.message || "Cek koneksi database"));
     }
 }
+</script>
+</body>
+</html>
