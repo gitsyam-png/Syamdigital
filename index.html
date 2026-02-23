@@ -1,57 +1,14 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <title>Syamdigital - Input Data</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-900 text-white p-6 font-sans">
-    <div class="max-w-md mx-auto bg-gray-800 p-6 rounded-lg shadow-xl border border-blue-500">
-        <h1 class="text-xl font-bold mb-4 text-blue-400">TAMBAH USER BARU</h1>
-        
-        <!-- FORM INPUT -->
-        <form id="userForm" class="space-y-3 mb-8">
-            <input type="text" id="nama" placeholder="Nama Lengkap" class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500" required>
-            <input type="email" id="email" placeholder="Email" class="w-full p-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:border-blue-500" required>
-            <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 p-2 rounded font-bold transition">SIMPAN KE NEON</button>
-        </form>
-
-        <h2 class="text-lg font-semibold mb-2 border-b border-gray-700">DAFTAR USER</h2>
-        <ul id="user-list" class="text-sm space-y-2 py-2"></ul>
-    </div>
-
-    <script>
-        const userForm = document.getElementById('userForm');
-        const userList = document.getElementById('user-list');
-
-        // 1. FUNGSI AMBIL DATA
-        async function loadUsers() {
-            const res = await fetch('/api/get-users');
-            const data = await res.json();
-            userList.innerHTML = data.map(u => `<li class="bg-gray-700 p-2 rounded opacity-80">${u.nama} - <span class="text-gray-400">${u.email}</span></li>`).join('');
-        }
-
-        // 2. FUNGSI KIRIM DATA
-        userForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const nama = document.getElementById('nama').value;
-            const email = document.getElementById('email').value;
-
-            const res = await fetch('/api/add-user', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ nama, email })
-            });
-
-            if (res.ok) {
-                userForm.reset();
-                loadUsers(); // Refresh daftar otomatis
-            } else {
-                alert("Gagal simpan! Cek koneksi Neon.");
-            }
-        };
-
-        loadUsers();
-    </script>
-</body>
-</html>
+async function loadUsers() {
+    const res = await fetch('/api/get-users');
+    const data = await res.json();
+    
+    // Kode ini akan otomatis memilih mana yang ada isinya (nama atau name)
+    userList.innerHTML = data.map(u => {
+        const displayNama = u.nama || u.name || 'Tanpa Nama';
+        const displayEmail = u.email || 'Tanpa Email';
+        return `<li class="bg-gray-700 p-2 rounded border-l-4 border-blue-500 shadow-sm">
+                    <span class="font-bold text-blue-300">${displayNama}</span> - 
+                    <span class="text-gray-400 text-xs italic">${displayEmail}</span>
+                </li>`;
+    }).join('');
+}
