@@ -160,5 +160,30 @@
         // Jalankan saat load
         loadUsers();
     </script>
+ <script>
+userList.innerHTML = data.map(u => {
+    // Gunakan u.nama ATAU u.name (mana yang tersedia di database)
+    const namaUser = u.nama || u.name || 'Tanpa Nama';
+    const emailUser = u.email || 'Tanpa Email';
+    const idUser = u.id || u.user_id; // Pastikan ID juga benar
+
+    return `
+        <div class="bg-slate-800/40 p-5 rounded-2xl border border-slate-700/50 flex justify-between items-center group hover:border-blue-500/50 transition-all">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-slate-900 rounded-full flex items-center justify-center text-blue-500 font-bold border border-slate-700 uppercase">
+                    ${namaUser.charAt(0)}
+                </div>
+                <div>
+                    <div class="font-bold text-white text-lg">${namaUser}</div>
+                    <div class="text-slate-500 text-sm italic font-light">${emailUser}</div>
+                </div>
+            </div>
+            <button onclick="deleteUser(${idUser})" class="opacity-0 group-hover:opacity-100 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all border border-red-500/20 shadow-lg">
+                HAPUS
+            </button>
+        </div>
+    `;
+}).join('');
+ </script>
 </body>
 </html>
