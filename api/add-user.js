@@ -1,3 +1,4 @@
+<script>
 import { neon } from '@neondatabase/serverless';
 
 export default async function handler(req, res) {
@@ -26,3 +27,23 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Gagal simpan ke Neon: ' + error.message });
     }
 }
+</script>
+<script>
+import { neon } from '@neondatabase/serverless';
+
+export default async function handler(req, res) {
+    if (req.method !== 'POST') return res.status(405).end();
+
+    const { nama, email } = req.body;
+    const sql = neon(process.env.DATABASE_URL);
+
+    try {
+        // Pastikan 'nama' di sini sama dengan di tabel Neon
+        await sql`INSERT INTO users (nama, email) VALUES (${nama}, ${email})`;
+        return res.status(200).json({ message: 'Berhasil!' });
+    } catch (error) {
+        console.error('Database Error:', error);
+        return res.status(500).json({ error: error.message });
+    }
+}
+</script>

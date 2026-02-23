@@ -1,3 +1,6 @@
+
+<script>
+
 import { neon } from '@neondatabase/serverless';
 
 export default async function handler(req, res) {
@@ -26,3 +29,23 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: 'Gagal memuat data: ' + error.message });
     }
 }
+</script>
+<script>
+import { neon } from '@neondatabase/serverless';
+
+export default async function handler(req, res) {
+    try {
+        const sql = neon(process.env.DATABASE_URL);
+        
+        // Ambil data
+        const data = await sql`SELECT * FROM users ORDER BY id DESC`;
+        
+        console.log("Data dari Neon:", data); // Ini akan muncul di Logs Vercel
+
+        return res.status(200).json(data);
+    } catch (error) {
+        console.error('Database Error:', error);
+        return res.status(500).json({ error: error.message });
+    }
+}
+</script>
